@@ -13,6 +13,34 @@ const CONFIG_PREFIX_KEY = "js-ts-biscuits.annotationPrefix";
 const CONFIG_COLOR_KEY = "js-ts-biscuits.annotationColor";
 const CONFIG_DISTANCE_KEY = "js-ts-biscuits.annotationMinDistance";
 
+const operatorMap: any = {
+  [ts.SyntaxKind.AmpersandAmpersandToken]: "&&",
+  [ts.SyntaxKind.BarBarToken]: "||",
+  [ts.SyntaxKind.EqualsEqualsToken]: "==",
+  [ts.SyntaxKind.EqualsEqualsEqualsToken]: "===",
+  "": "",
+};
+
+const operatorValues: any = {};
+Object.values(operatorMap).forEach((value: any) => {
+  operatorValues[value] = true;
+});
+
+const statementMap: any = {
+  [ts.SyntaxKind.IfStatement]: "if",
+  [ts.SyntaxKind.ForStatement]: "for",
+  [ts.SyntaxKind.SwitchStatement]: "switch",
+  [ts.SyntaxKind.WhileStatement]: "while",
+};
+
+function getOperatorString(kind: ts.SyntaxKind, kindMap: any = operatorMap) {
+  return kindMap[kind] || "";
+}
+
+function getStatementString(kind: ts.SyntaxKind, kindMap: any = statementMap) {
+  return kindMap[kind];
+}
+
 function stringifyStatementName(statement: any, prefix: string) {
   let label = "";
   let name = statement?.name?.escapedText || "";
@@ -34,19 +62,29 @@ function stringifyStatementName(statement: any, prefix: string) {
       label = "function: ";
       break;
 
-    case ts.SyntaxKind.SwitchStatement:
-      label = "switch";
-      break;
-
     case ts.SyntaxKind.IfStatement:
-      label = "if";
+    case ts.SyntaxKind.SwitchStatement:
+    case ts.SyntaxKind.WhileStatement:
+    case ts.SyntaxKind.ForStatement:
+      let description = recursivelyGetStatementString(statement.expression);
+      if (operatorValues[description.trim()]) {
+        description = `¯\\_(ツ)_/¯`;
+      }
+
+      const statementString = getStatementString(statement.kind);
+      label = `${statementString} (${description})`;
       break;
 
     case ts.SyntaxKind.VariableStatement:
       label =
         "variable " +
         statement.declarationList.declarations
-          .map((declaration: any) => declaration.name.escapedText)
+          .map(
+            (declaration: any) =>
+              `${
+                declaration.name.escapedText
+              } = ${recursivelyGetStatementString(declaration)}`
+          )
           .join(", ");
       break;
 
@@ -69,12 +107,67 @@ function stringifyStatementName(statement: any, prefix: string) {
     }
   }
 
-  // if (statement?.expression?.name) {
-  //   console.log("expression:", statement.expression);
-  //   name = statement.expression.name.escapedText;
+  return `${prefix}${label}${type}${name}`;
+}
+
+function recursivelyGetStatementString(
+  statement: any,
+  currentString = ""
+): string {
+  if (!statement) {
+    return currentString;
+  }
+
+  let newString = currentString;
+
+  if (statement.escapedText) {
+    return statement.escapedText;
+  }
+
+  if (statement.text) {
+    return `"${statement.text}"`;
+  }
+
+  // if (statement.name) {
+  //   newString += recursivelyGetStatementString(statement.name);
   // }
 
-  return `${prefix}${label}${type}${name}`;
+  if (statement.expression) {
+    if (statement.kind === ts.SyntaxKind.ParenthesizedExpression) {
+      return `(${recursivelyGetStatementString(
+        statement.expression,
+        newString
+      )})`;
+    } else if (statement.kind === ts.SyntaxKind.CallExpression) {
+      return `${recursivelyGetStatementString(
+        statement.expression,
+        newString
+      )}(${statement.arguments
+        .map((argument: any) => recursivelyGetStatementString(argument))
+        .join(", ")})`;
+    } else if (statement.kind === ts.SyntaxKind.PropertyAccessExpression) {
+      return `${recursivelyGetStatementString(statement.expression) || '""'}.${
+        recursivelyGetStatementString(statement.name) || '""'
+      }`;
+    } else {
+      return recursivelyGetStatementString(statement.expression, newString);
+    }
+  }
+
+  if (statement.left || statement.operatorToken || statement.right) {
+    newString += `${recursivelyGetStatementString(
+      statement.left,
+      newString
+    )} ${getOperatorString(
+      statement.operatorToken.kind
+    )} ${recursivelyGetStatementString(statement.right, newString)}`;
+  }
+
+  if (statement.initializer) {
+    return recursivelyGetStatementString(statement.initializer, newString);
+  }
+
+  return newString;
 }
 
 function getTypeName(propertyType: ts.SyntaxKind) {
@@ -121,6 +214,10 @@ export const activate = createActivate(
           if (node?.body?.statements?.length) {
             console.log("body statements: ", node?.body?.statements);
             children = [...children, ...node.body.statements];
+          }
+
+          if (node?.thenStatement?.statements?.length) {
+            children = [...children, ...node.thenStatement.statements];
           }
 
           if (activeEditor) {

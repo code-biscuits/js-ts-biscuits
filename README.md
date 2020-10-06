@@ -26,6 +26,10 @@ The HTML extension getting fixed will be the blueprint for fixing other extensio
 
 ## Release Notes
 
+### 0.0.4
+
+Recursively annotate if, switch, for, and while statements
+
 ### 0.0.3
 
 First tested public launch
