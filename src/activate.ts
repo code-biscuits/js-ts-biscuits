@@ -82,15 +82,15 @@ function stringifyStatementName(statement: any, prefix: string) {
           .map(
             (declaration: any) =>
               `${
-                declaration.name.escapedText
+                declaration?.name?.escapedText
               } = ${recursivelyGetStatementString(declaration)}`
           )
           .join(", ");
       break;
 
     case ts.SyntaxKind.ExpressionStatement:
-      if (statement.expression?.expression.escapedText) {
-        label = statement.expression?.expression.escapedText;
+      if (statement.expression?.expression?.escapedText) {
+        label = statement.expression?.expression?.escapedText;
       }
       break;
   }
@@ -98,7 +98,7 @@ function stringifyStatementName(statement: any, prefix: string) {
   let type = "";
   if (statement.type) {
     if (statement.type?.name?.escapedText) {
-      type = `<${statement.type.name.escapedText}> `;
+      type = `<${statement.type?.name?.escapedText}> `;
     } else {
       const typeName = getTypeName(statement.type.kind);
       if (typeName) {
@@ -120,8 +120,8 @@ function recursivelyGetStatementString(
 
   let newString = currentString;
 
-  if (statement.escapedText) {
-    return statement.escapedText;
+  if (statement?.escapedText) {
+    return statement?.escapedText;
   }
 
   if (statement.text) {
