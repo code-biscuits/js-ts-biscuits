@@ -69,6 +69,7 @@ function stringifyStatementName(statement: any, prefix: string) {
 
     case ts.SyntaxKind.FunctionDeclaration:
       label = "function: ";
+
       break;
 
     case ts.SyntaxKind.IfStatement:
@@ -138,8 +139,10 @@ function recursivelyGetStatementString(
     return statement?.escapedText;
   }
 
-  if (statement.text) {
+  if (statement.text && statement.kind === ts.SyntaxKind.StringLiteral) {
     return `"${statement.text}"`;
+  } else if (statement.text) {
+    return statement.text;
   }
 
   if (statement.expression) {

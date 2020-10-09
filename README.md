@@ -26,6 +26,14 @@ The HTML extension getting fixed will be the blueprint for fixing other extensio
 
 ## Release Notes
 
+### 0.0.7
+
+Only wrap string literal values in quotes
+
+### 0.0.6
+
+Get switch case clauses and blocks working
+
 ### 0.0.4
 
 Recursively annotate if, switch, for, and while statements
