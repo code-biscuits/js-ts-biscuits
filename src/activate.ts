@@ -31,14 +31,23 @@ const statementMap: any = {
   [ts.SyntaxKind.ForStatement]: "for",
   [ts.SyntaxKind.SwitchStatement]: "switch",
   [ts.SyntaxKind.WhileStatement]: "while",
+  [ts.SyntaxKind.CaseClause]: "case",
+  [ts.SyntaxKind.CaseBlock]: "case",
 };
 
 function getOperatorString(kind: ts.SyntaxKind, kindMap: any = operatorMap) {
   return kindMap[kind] || "";
 }
 
-function getStatementString(kind: ts.SyntaxKind, kindMap: any = statementMap) {
-  return kindMap[kind];
+function getStatementString(
+  node: any,
+  kind: ts.SyntaxKind,
+  kindMap: any = statementMap
+): any {
+  if (kind === ts.SyntaxKind.ExpressionStatement) {
+    return getStatementString(node.expression, node.expression.kind);
+  }
+  return kindMap[kind] || "";
 }
 
 function stringifyStatementName(statement: any, prefix: string) {
@@ -66,12 +75,14 @@ function stringifyStatementName(statement: any, prefix: string) {
     case ts.SyntaxKind.SwitchStatement:
     case ts.SyntaxKind.WhileStatement:
     case ts.SyntaxKind.ForStatement:
+    case ts.SyntaxKind.CaseBlock:
+    case ts.SyntaxKind.ExpressionStatement:
+    case ts.SyntaxKind.CaseClause:
       let description = recursivelyGetStatementString(statement.expression);
       if (operatorValues[description.trim()]) {
         description = `¯\\_(ツ)_/¯`;
       }
-
-      const statementString = getStatementString(statement.kind);
+      const statementString = getStatementString(statement, statement.kind);
       label = `${statementString} (${description})`;
       break;
 
@@ -87,12 +98,6 @@ function stringifyStatementName(statement: any, prefix: string) {
           )
           .join(", ");
       break;
-
-    case ts.SyntaxKind.ExpressionStatement:
-      if (statement.expression?.expression?.escapedText) {
-        label = statement.expression?.expression?.escapedText;
-      }
-      break;
   }
 
   let type = "";
@@ -107,7 +112,16 @@ function stringifyStatementName(statement: any, prefix: string) {
     }
   }
 
-  return `${prefix}${label}${type}${name}`;
+  // handle edge cases
+  if (statement.kind === ts.SyntaxKind.Constructor) {
+    name = "constructor";
+  }
+
+  if (statement.kind === ts.SyntaxKind.CaseBlock) {
+    name = "case";
+  }
+
+  return `${prefix || ""}${label || ""}${type || ""}${name || ""}`;
 }
 
 function recursivelyGetStatementString(
@@ -127,10 +141,6 @@ function recursivelyGetStatementString(
   if (statement.text) {
     return `"${statement.text}"`;
   }
-
-  // if (statement.name) {
-  //   newString += recursivelyGetStatementString(statement.name);
-  // }
 
   if (statement.expression) {
     if (statement.kind === ts.SyntaxKind.ParenthesizedExpression) {
@@ -201,7 +211,6 @@ export const activate = createActivate(
         ts.ScriptTarget.Latest
       );
 
-      console.log("statements", sourceFile.statements);
       let nodes: any = sourceFile.statements;
 
       let children: any[] = [];
@@ -211,8 +220,11 @@ export const activate = createActivate(
             children = [...children, ...node.members];
           }
 
+          if (node?.statements?.length) {
+            children = [...children, ...node.statements];
+          }
+
           if (node?.body?.statements?.length) {
-            console.log("body statements: ", node?.body?.statements);
             children = [...children, ...node.body.statements];
           }
 
@@ -220,8 +232,11 @@ export const activate = createActivate(
             children = [...children, ...node.thenStatement.statements];
           }
 
+          if (node?.caseBlock?.clauses?.length) {
+            children = [...children, ...node.caseBlock.clauses];
+          }
+
           if (activeEditor) {
-            console.log("node", node);
             const { line: startLine } = ts.getLineAndCharacterOfPosition(
               sourceFile,
               node.pos
@@ -232,9 +247,7 @@ export const activate = createActivate(
             );
             const endOfLine = activeEditor.document.lineAt(line).range.end;
 
-            const contentText = stringifyStatementName(node, prefix);
-
-            console.log("contentText", contentText);
+            let contentText = stringifyStatementName(node, prefix);
 
             if (contentText !== prefix && line - startLine >= minDistance) {
               decorations.push({
@@ -252,7 +265,6 @@ export const activate = createActivate(
           }
         });
 
-        console.log("children: ", children);
         nodes = [...children];
         children = [];
       }
