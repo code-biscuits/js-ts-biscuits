@@ -221,6 +221,11 @@ export const activate = createActivate(
       prefix: string,
       minDistance: number
     ) {
+      // We bail on a script tag to prevent Vue and Svelte file usage
+      if (text.indexOf("<script") > -1) {
+        return [];
+      }
+
       const decorations: any[] = [];
 
       const sourceFile = ts.createSourceFile(
@@ -241,6 +246,8 @@ export const activate = createActivate(
             "statements",
             "clauses",
             "declarations",
+            "properties",
+            "expressions",
           ].forEach((propName: string) => {
             if (node[propName]?.length) {
               children = [...children, ...node[propName]];
@@ -255,6 +262,7 @@ export const activate = createActivate(
             "caseBlock",
             "declarationList",
             "initializer",
+            "expression",
           ].forEach((propName: string) => {
             if (node[propName]) {
               children.push(node[propName]);
@@ -273,6 +281,8 @@ export const activate = createActivate(
             const endOfLine = activeEditor.document.lineAt(line).range.end;
 
             let contentText = stringifyStatementName(node, prefix);
+
+            console.log("CONTENT TEXT: ", contentText, node);
 
             if (contentText !== prefix && line - startLine >= minDistance) {
               decorations.push({
