@@ -18,6 +18,21 @@ const operatorMap: any = {
   [ts.SyntaxKind.BarBarToken]: "||",
   [ts.SyntaxKind.EqualsEqualsToken]: "==",
   [ts.SyntaxKind.EqualsEqualsEqualsToken]: "===",
+  [ts.SyntaxKind.GreaterThanEqualsToken]: ">=",
+  [ts.SyntaxKind.LessThanEqualsToken]: "<=",
+  [ts.SyntaxKind.LessThanToken]: "<",
+  [ts.SyntaxKind.GreaterThanToken]: ">",
+  [ts.SyntaxKind.LessThanToken]: "<",
+  [ts.SyntaxKind.DotToken]: ".",
+  [ts.SyntaxKind.EqualsGreaterThanToken]: "=>",
+  [ts.SyntaxKind.PercentToken]: "%",
+  [ts.SyntaxKind.AsteriskToken]: "*",
+  [ts.SyntaxKind.PlusToken]: "+",
+  [ts.SyntaxKind.PlusPlusToken]: "++",
+  [ts.SyntaxKind.MinusToken]: "-",
+  [ts.SyntaxKind.MinusMinusToken]: "--",
+  [ts.SyntaxKind.PlusEqualsToken]: "+=",
+  [ts.SyntaxKind.MinusEqualsToken]: "-=",
   "": "",
 };
 
@@ -219,25 +234,32 @@ export const activate = createActivate(
       let children: any[] = [];
       while (nodes.length !== 0) {
         nodes.forEach((node: any) => {
-          if (node?.members?.length) {
-            children = [...children, ...node.members];
-          }
+          // add node lists to children
+          [
+            "members",
+            "arguments",
+            "statements",
+            "clauses",
+            "declarations",
+          ].forEach((propName: string) => {
+            if (node[propName]?.length) {
+              children = [...children, ...node[propName]];
+            }
+          });
 
-          if (node?.statements?.length) {
-            children = [...children, ...node.statements];
-          }
-
-          if (node?.body?.statements?.length) {
-            children = [...children, ...node.body.statements];
-          }
-
-          if (node?.thenStatement?.statements?.length) {
-            children = [...children, ...node.thenStatement.statements];
-          }
-
-          if (node?.caseBlock?.clauses?.length) {
-            children = [...children, ...node.caseBlock.clauses];
-          }
+          // add nodes with nodelists as children
+          [
+            "statement",
+            "body",
+            "thenStatement",
+            "caseBlock",
+            "declarationList",
+            "initializer",
+          ].forEach((propName: string) => {
+            if (node[propName]) {
+              children.push(node[propName]);
+            }
+          });
 
           if (activeEditor) {
             const { line: startLine } = ts.getLineAndCharacterOfPosition(
