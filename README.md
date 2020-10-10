@@ -26,6 +26,14 @@ The HTML extension getting fixed will be the blueprint for fixing other extensio
 
 ## Release Notes
 
+### 0.0.9
+
+Change activation events to only target js, ts, and json files for now
+
+### 0.0.8
+
+Show more nested nodes and update operator map to support more symbols and operators
+
 ### 0.0.7
 
 Only wrap string literal values in quotes

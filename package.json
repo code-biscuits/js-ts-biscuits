@@ -30,7 +30,9 @@
     "biscuits"
   ],
   "activationEvents": [
-    "*"
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:json"
   ],
   "main": "./bundled/extension.js",
   "contributes": {
