@@ -1,6 +1,6 @@
 {
   "name": "js-ts-biscuits",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Add annotations, hereso unto for known as \\\"Biscuits\\\", to the end of the line of closing brackets and parentheses. Such Biscuits could include function/object names or even types. Make callback soup digestible!",
   "repository": {
     "type": "git",
