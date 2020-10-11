@@ -90,10 +90,7 @@ function stringifyStatementName(statement: any, prefix: string) {
     case ts.SyntaxKind.IfStatement:
     case ts.SyntaxKind.SwitchStatement:
     case ts.SyntaxKind.WhileStatement:
-    case ts.SyntaxKind.ForStatement:
-    case ts.SyntaxKind.CaseBlock:
-    case ts.SyntaxKind.ExpressionStatement:
-    case ts.SyntaxKind.CaseClause:
+    case ts.SyntaxKind.ForStatement: {
       let description = recursivelyGetStatementString(statement.expression);
       if (operatorValues[description.trim()]) {
         description = `¯\\_(ツ)_/¯`;
@@ -101,6 +98,19 @@ function stringifyStatementName(statement: any, prefix: string) {
       const statementString = getStatementString(statement, statement.kind);
       label = `${statementString} (${description})`;
       break;
+    }
+
+    case ts.SyntaxKind.CaseBlock:
+    case ts.SyntaxKind.ExpressionStatement:
+    case ts.SyntaxKind.CaseClause: {
+      let description = recursivelyGetStatementString(statement.expression);
+      if (operatorValues[description.trim()]) {
+        description = `¯\\_(ツ)_/¯`;
+      }
+      const statementString = getStatementString(statement, statement.kind);
+      label = `${statementString} ${description}`;
+      break;
+    }
 
     case ts.SyntaxKind.VariableStatement:
       label =
