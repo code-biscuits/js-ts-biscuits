@@ -12,6 +12,7 @@ import * as ts from "typescript";
 const CONFIG_PREFIX_KEY = "js-ts-biscuits.annotationPrefix";
 const CONFIG_COLOR_KEY = "js-ts-biscuits.annotationColor";
 const CONFIG_DISTANCE_KEY = "js-ts-biscuits.annotationMinDistance";
+const CONFIG_MAX_LENGTH = "js-ts-biscuits.annotationMaxLength";
 
 const operatorMap: any = {
   [ts.SyntaxKind.AmpersandAmpersandToken]: "&&",
@@ -66,10 +67,18 @@ function getStatementString(
 }
 
 function stringifyStatementName(statement: any, prefix: string) {
+  if (!statement) {
+    return "";
+  }
+
   let label = "";
   let name = statement?.name?.escapedText || "";
 
-  switch (statement.kind) {
+  switch (statement?.kind) {
+    case ts.SyntaxKind.ObjectLiteralExpression:
+      label = "{}";
+      break;
+
     case ts.SyntaxKind.ClassDeclaration:
       label = "class: ";
       break;
@@ -83,9 +92,22 @@ function stringifyStatementName(statement: any, prefix: string) {
       break;
 
     case ts.SyntaxKind.FunctionDeclaration:
-      label = "function: ";
-
+    case ts.SyntaxKind.FunctionExpression: {
+      const parametersString = statement.parameters
+        .map((parameter: any) => stringifyStatementName(parameter, ""))
+        .join(", ");
+      label = `function ${name} (${parametersString}) {}`;
+      name = "";
       break;
+    }
+
+    case ts.SyntaxKind.ArrowFunction: {
+      const parametersString = statement.parameters
+        .map((parameter: any) => stringifyStatementName(parameter, ""))
+        .join(", ");
+      label = `(${parametersString}) => {}`;
+      break;
+    }
 
     case ts.SyntaxKind.IfStatement:
     case ts.SyntaxKind.SwitchStatement:
@@ -103,7 +125,7 @@ function stringifyStatementName(statement: any, prefix: string) {
     case ts.SyntaxKind.CaseBlock:
     case ts.SyntaxKind.ExpressionStatement:
     case ts.SyntaxKind.CaseClause: {
-      let description = recursivelyGetStatementString(statement.expression);
+      let description = stringifyStatementName(statement.expression, "");
       if (operatorValues[description.trim()]) {
         description = `¯\\_(ツ)_/¯`;
       }
@@ -116,12 +138,17 @@ function stringifyStatementName(statement: any, prefix: string) {
       label =
         "variable " +
         statement.declarationList.declarations
-          .map(
-            (declaration: any) =>
-              `${
-                declaration?.name?.escapedText
-              } = ${recursivelyGetStatementString(declaration)}`
-          )
+          .map((declaration: any) => {
+            let initializerString = stringifyStatementName(
+              declaration.initializer,
+              ""
+            );
+
+            return `${
+              declaration?.name?.escapedText
+              // THIS SEEMS LIKE IT
+            } = ${initializerString}`;
+          })
           .join(", ");
       break;
   }
@@ -258,6 +285,7 @@ export const activate = createActivate(
             "declarations",
             "properties",
             "expressions",
+            "parameters",
           ].forEach((propName: string) => {
             if (node[propName]?.length) {
               children = [...children, ...node[propName]];
@@ -292,9 +320,13 @@ export const activate = createActivate(
 
             let contentText = stringifyStatementName(node, prefix);
 
-            console.log("CONTENT TEXT: ", contentText, node);
-
             if (contentText !== prefix && line - startLine >= minDistance) {
+              let maxLength: number =
+                vscode.workspace.getConfiguration().get(CONFIG_MAX_LENGTH) || 0;
+              if (maxLength && contentText.length > maxLength) {
+                contentText = contentText.substr(0, maxLength) + "...";
+              }
+
               decorations.push({
                 range: new vscode.Range(
                   activeEditor.document.positionAt(node.end),

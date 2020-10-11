@@ -26,6 +26,18 @@ The HTML extension getting fixed will be the blueprint for fixing other extensio
 
 ## Release Notes
 
+### 0.0.13
+
+Add configuration for maximum annotation length and update defaults
+
+### 0.0.12
+
+Handle Function Expressions and Arrow Functions better
+
+### 0.0.11
+
+Add extra handler to bail out of Vue and Svelte files (anything with a `<script>`) until we can handle those cases better
+
 ### 0.0.9
 
 Change activation events to only target js, ts, and json files for now

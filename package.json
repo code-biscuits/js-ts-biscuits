@@ -1,6 +1,6 @@
 {
   "name": "js-ts-biscuits",
-  "version": "0.0.11",
+  "version": "0.0.13",
   "description": "Add annotations, hereso unto for known as \\\"Biscuits\\\", to the end of the line of closing brackets and parentheses. Such Biscuits could include function/object names or even types. Make callback soup digestible!",
   "repository": {
     "type": "git",
@@ -52,8 +52,13 @@
         },
         "js-ts-biscuits.annotationMinDistance": {
           "type": "number",
-          "default": 0,
+          "default": 2,
           "description": "What is the minimum line distance between start and end tags. Example: A value of 0 will annotate end tags on the same line as a start tag."
+        },
+        "js-ts-biscuits.annotationMaxLength": {
+          "type": "number",
+          "default": 80,
+          "description": "What is the longest annotation you should see before we truncate it? A 0 value shows the full string."
         }
       }
     }
