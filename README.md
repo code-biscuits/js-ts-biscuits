@@ -4,6 +4,10 @@ Use js-ts-biscuits to make code soup and callback spaghetti more digestible. Ann
 
 ![](./example.gif)
 
+## Warning! JSON, JSX/TSX, Vue, and Svelte currently unsupported
+
+This extension has issues with those formats. We are currently planning specific plugins for those use cases.
+
 ## Warning! Potential Plugin Conflict
 
 In the current implementation, code-biscuits prevent seeing GitLens annotations. Issue can be tracked here:
@@ -22,9 +26,17 @@ The HTML extension getting fixed will be the blueprint for fixing other extensio
   - default: `"// "`,
 
 - `js-ts-biscuits.annotationMinDistance` _number_ : Determines the minimum amount of lines between start and end tag used to decide to show the annotations.
+
   - default: `0`,
 
+- `js-ts-biscuits.annotationMaxLength` _number_ : What is the longest annotation you should see before we cut it off ewith a `...`? A 0 value shows the full string.
+  - default: `80`,
+
 ## Release Notes
+
+### 0.0.14
+
+Removed JSON support in favor of a JSON specific extension later
 
 ### 0.0.13
 

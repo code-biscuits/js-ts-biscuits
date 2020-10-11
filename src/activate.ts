@@ -260,6 +260,9 @@ export const activate = createActivate(
     ) {
       // We bail on a script tag to prevent Vue and Svelte file usage
       if (text.indexOf("<script") > -1) {
+        console.warn(
+          "Bailing out of JS/TS Biscuits due to <script tag. Apologies if you just have it in a string. We need to be able to handle this better. Work in progress."
+        );
         return [];
       }
 
@@ -319,6 +322,8 @@ export const activate = createActivate(
             const endOfLine = activeEditor.document.lineAt(line).range.end;
 
             let contentText = stringifyStatementName(node, prefix);
+
+            console.log("CONTENT TEXT: ", contentText, node);
 
             if (contentText !== prefix && line - startLine >= minDistance) {
               let maxLength: number =

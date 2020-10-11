@@ -4,6 +4,10 @@ All notable changes to the "html-biscuits" extension will be documented in this 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 0.0.14
+
+Removed JSON support in favor of a JSON specific extension later
+
 ### 0.0.13
 
 Add configuration for maximum annotation length and update defaults
